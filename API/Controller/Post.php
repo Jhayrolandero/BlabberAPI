@@ -1,7 +1,7 @@
 <?php
 include_once __DIR__ . "/../Model/AuthorModel.php";
 include_once __DIR__ . "/../Controller/AuthController.php";
-include __DIR__ . "/../Model/BlogModel.php";
+include_once __DIR__ . "/../Model/BlogModel.php";
 class POST
 {
     private $author;
@@ -11,7 +11,7 @@ class POST
     {
         $this->author = new Author();
         $this->auth = new Auth();
-        $this->blog = new Blog();
+        $this->blog = new Blogs();
     }
 
     public function handlePost($endpoint)

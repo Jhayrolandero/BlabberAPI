@@ -1,9 +1,8 @@
 <?php
 include_once __DIR__ . "/../Global/Query.php";
 
-class Blog
+class Blogs
 {
-
     private $TABLE = "blog";
     private $TABLE2 = "`author-blog`";
     private $query;
@@ -16,7 +15,6 @@ class Blog
 
     public function addBlog($data, $id)
     {
-
         $res = $this->query->insertQuery($data);
 
         // $data["blogID"] = $id;
@@ -28,5 +26,10 @@ class Blog
         } else {
             return $res;
         }
+    }
+
+    public function getBlog()
+    {
+        return $this->query->selectQuery();
     }
 }
