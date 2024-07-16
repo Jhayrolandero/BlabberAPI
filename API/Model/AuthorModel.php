@@ -14,8 +14,10 @@ class Author
     {
         $statusMsg = [];
         $email = $data['email'];
-        $count = count($this->query->selectQuery(["email"], ["email", $email]));
+        $count = count($this->query->selectQuery(["email"], ["email", $email])["data"]);
 
+        // echo count($this->query->selectQuery(["email"], ["email", $email])["data"]);
+        // var_dump($this->query->selectQuery(["email"], ["email", $email])["data"]);
         if ($count > 0) {
             $statusMsg = ["status" => 409, "msg" => "Email already taken"];
             return $statusMsg;
@@ -24,5 +26,10 @@ class Author
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
         return $this->query->insertQuery($data);
+    }
+
+
+    public function getAuthor($id)
+    {
     }
 }

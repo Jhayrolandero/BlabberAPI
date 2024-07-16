@@ -3,6 +3,7 @@
 
 include_once "./Controller/Get.php";
 include_once "./Controller/Post.php";
+include_once "./Controller/AuthController.php";
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Credentials: true');
@@ -32,27 +33,30 @@ if (isset($_REQUEST['request'])) {
 
 $GET = new GET();
 $POST = new POST();
+$auth = new Auth();
 
 switch ($_SERVER['REQUEST_METHOD']) {
 
     case "GET":
-        switch ($request[0]) {
-        }
+        $id = $auth->verifyToken()['payload']['id'];
+
+        $res = $GET->handleGET($request[0]);
+        http_response_code($res['status']);
+        echo json_encode($res);
+
+        // switch ($request[0]) {
+        //     case "test":
+        //         echo json_encode($auth->verifyToken());
+        //         break;
+        // }
         break;
     default:
         http_response_code(404);
         break;
 
     case "POST":
-        switch ($request[0]) {
-            case "register":
-                $res = $POST->handlePost($request[0]);
-                http_response_code($res['status']);
-                echo json_encode($res);
-                break;
-            default:
-                http_response_code(404);
-                break;
-        }
+        $res = $POST->handlePost($request[0]);
+        http_response_code($res['status']);
+        echo json_encode($res);
         break;
 }

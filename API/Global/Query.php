@@ -25,14 +25,20 @@ class Query extends Connection
                 $stmt = $this->connect()->prepare($sql);
 
                 $stmt->bindParam(1, $val);
-                $stmt->execute();
-                return $stmt->fetchAll();
+
+                if ($stmt->execute()) {
+                    return ["status" => 200, "message" => "Fetch successful", "data" => $stmt->fetchAll()];
+                } else {
+                    return ["status" => 500, "message" => "Failed to execute"];
+                }
             }
 
-            return $this->connect()->query($sql)->fetchAll();
+            return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
         } catch (\PDOException $pDOException) {
             // return $pDOException;
-            return false;
+            error_log($pDOException->getMessage());
+
+            return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
         }
     }
 
@@ -66,6 +72,22 @@ class Query extends Connection
 
             return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
         }
+    }
+
+    public function getLastID($table)
+    {
+
+        $env = parse_ini_file('.env');
+
+        $DBName = $env["DB_NAME"];
+        $sql = "SELECT AUTO_INCREMENT 
+                FROM information_schema.TABLES 
+                WHERE TABLE_SCHEMA = '$DBName' AND TABLE_NAME = '$table'";
+
+
+        return $this->connect()->query($sql)->fetchAll();
+        // return $this->executeGetQuery($sql)['data'][0]['AUTO_INCREMENT'];
+        // return $this->executeGetQuery($sql)['data'][0]['AUTO_INCREMENT'];
     }
 
     private function extractColumn($data)
