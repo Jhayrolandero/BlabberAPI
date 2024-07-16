@@ -1,0 +1,90 @@
+
+<?php
+include_once __DIR__ . "/../Model/Database.php";
+class Query extends Connection
+{
+
+    private $TABLE;
+    function __construct($TABLE)
+    {
+        $this->TABLE = $TABLE;
+    }
+
+    public function selectQuery($cols = null, $cond = null)
+    {
+        $cols = $cols ? implode(",", $cols) : '*';
+        $sql = "SELECT $cols from $this->TABLE";
+
+        try {
+            if (isset($cond)) {
+                $condCol = $cond[0];
+                $val = $cond[1];
+
+                $sql .= " WHERE $condCol = ?";
+
+                $stmt = $this->connect()->prepare($sql);
+
+                $stmt->bindParam(1, $val);
+                $stmt->execute();
+                return $stmt->fetchAll();
+            }
+
+            return $this->connect()->query($sql)->fetchAll();
+        } catch (\PDOException $pDOException) {
+            // return $pDOException;
+            return false;
+        }
+    }
+
+    public function insertQuery($data)
+    {
+        $cols = implode(",", $this->extractColumn($data)[0]);
+        $placeholder = $this->extractColumn($data)[1];
+        $vals = $this->extractValues($data);
+
+        $sql = "INSERT INTO $this->TABLE ($cols)
+                VALUES ($placeholder)";
+
+        try {
+            $stmt = $this->connect()->prepare($sql);
+            // Glue
+            $pos = 1;
+            for ($i = 0; $i < count($vals); $i++) {
+                $stmt->bindParam($pos, $vals[$i]);
+                $pos += 1;
+            }
+            // return $stmt->execute();
+
+            if ($stmt->execute()) {
+                return ["status" => 200, "message" => "Insert successful"];
+            } else {
+                return ["status" => 500, "message" => "Failed to execute"];
+            }
+        } catch (\PDOException $pDOException) {
+            // Log the error message
+            error_log($pDOException->getMessage());
+
+            return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
+        }
+    }
+
+    private function extractColumn($data)
+    {
+        $cols = array_keys($data);
+        $placeholderLen = count($cols);
+        $placeHolder = [];
+
+        for ($i = 0; $i < $placeholderLen; $i++) {
+            array_push($placeHolder, "?");
+        }
+
+        return [$cols, implode(",", $placeHolder)];
+    }
+
+    private function extractValues($data)
+    {
+        $vals = array_values($data);
+
+        return $vals;
+    }
+}
