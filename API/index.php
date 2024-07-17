@@ -3,6 +3,8 @@
 
 include_once "./Controller/Get.php";
 include_once "./Controller/Post.php";
+include_once "./Controller/Delete.php";
+include_once "./Controller/Put.php";
 include_once "./Controller/AuthController.php";
 
 header('Access-Control-Allow-Origin: *');
@@ -33,6 +35,9 @@ if (isset($_REQUEST['request'])) {
 
 $GET = new GET();
 $POST = new POST();
+$DELETE = new DELETE();
+$PUT = new PUT();
+
 $auth = new Auth();
 
 switch ($_SERVER['REQUEST_METHOD']) {
@@ -40,15 +45,22 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case "GET":
         $id = $auth->verifyToken()['payload']['id'];
 
-        $res = $GET->handleGET($request[0]);
-        http_response_code($res['status']);
+        if (isset($_GET['q']) && $_GET['q'] == 'fetchBlog') {
+            $condID = [$id, $request[1]];
+            $type = "authorBlog";
+        } else if (isset($_GET['q']) && $_GET['q'] == 'author') {
+            $condID = $id;
+            $type = "authorBlogs";
+        } else if (isset($request[1])) {
+            $condID = $request[1];
+            $type = "blogs";
+        } else {
+            $type = "";
+            $condID = null;
+        }
+        $res = $GET->handleGET($request[0], $condID, $type);
+        // http_response_code($res['status']);
         echo json_encode($res);
-
-        // switch ($request[0]) {
-        //     case "test":
-        //         echo json_encode($auth->verifyToken());
-        //         break;
-        // }
         break;
     default:
         http_response_code(404);
@@ -57,6 +69,19 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case "POST":
         $res = $POST->handlePost($request[0]);
         http_response_code($res['status']);
+        echo json_encode($res);
+        break;
+
+    case "DELETE":
+        $res = $DELETE->handleDelete($request[0], $request[1]);
+        // http_response_code($res['status']);
+        echo json_encode($res);
+        break;
+
+    case "PUT":
+        $jsonContent = file_get_contents('php://input');
+        $data = json_decode($jsonContent, true);
+        $res = $PUT->handlePUT($request[0], $data, $request[1]);
         echo json_encode($res);
         break;
 }

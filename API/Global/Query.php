@@ -42,6 +42,46 @@ class Query extends Connection
         }
     }
 
+    public function unionQuery($cols = null, $bindID, $bindTable, $cond = null)
+    {
+        $cols = $cols ? implode(",", $cols) : '*';
+
+        $sql = "SELECT $cols from $this->TABLE
+                INNER JOIN `$bindTable[0]` on $this->TABLE.`$bindID[0]` = `$bindTable[0]`.`$bindID[0]`
+                INNER JOIN `$bindTable[1]` on $this->TABLE.`$bindID[1]` = `$bindTable[1]`.`$bindID[1]`
+        ";
+
+        try {
+            if (isset($cond)) {
+                $condCol = $cond[0];
+                $val = $cond[1];
+
+                $sql .= " WHERE $condCol = ?";
+
+                $stmt = $this->connect()->prepare($sql);
+                if (is_array($val) && count($val) == 2) {
+                    $stmt->bindParam(1, $val[0]);
+                    $stmt->bindParam(2, $val[1]);
+                } else {
+                    $stmt->bindParam(1, $val);
+                }
+
+                if ($stmt->execute()) {
+                    return ["status" => 200, "message" => "Fetch successful", "data" => $stmt->fetchAll()];
+                } else {
+                    return ["status" => 500, "message" => "Failed to execute"];
+                }
+            }
+
+            return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
+        } catch (\PDOException $pDOException) {
+            // return $pDOException;
+            error_log($pDOException->getMessage());
+
+            return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
+        }
+    }
+
     public function insertQuery($data)
     {
         $cols = implode(",", $this->extractColumn($data)[0]);
@@ -74,20 +114,81 @@ class Query extends Connection
         }
     }
 
+    public function deleteQuery($cond, $id)
+    {
+        $sql = "DELETE FROM $this->TABLE WHERE $cond = ?";
+
+        // return $sql;
+        try {
+            $stmt = $this->connect()->prepare($sql);
+            $stmt->bindParam(1, $id);
+
+            if ($stmt->execute()) {
+                return ["status" => 200, "message" => "Delete successful"];
+            } else {
+                return ["status" => 500, "message" => "Failed to execute"];
+            }
+        } catch (\PDOException $pDOException) {
+            // Log the error message
+            error_log($pDOException->getMessage());
+
+            return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
+        }
+    }
+
+    public function putQuery($data, $cond, $condVal)
+    {
+        $uCol = implode(",", $this->setColumn($data)[0]);
+        $vals = $this->setColumn($data)[1];
+        $sql = "UPDATE $this->TABLE
+                SET $uCol
+                WHERE $cond = ?";
+
+        try {
+            $stmt = $this->connect()->prepare($sql);
+            // Glue
+            $pos = 1;
+            for ($i = 0; $i < count($vals); $i++) {
+                $stmt->bindParam($pos, $vals[$i]);
+                $pos += 1;
+            }
+            $stmt->bindParam($pos, $condVal);
+
+            if ($stmt->execute()) {
+                return ["status" => 200, "message" => "Updated successful"];
+            } else {
+                return ["status" => 500, "message" => "Failed to execute"];
+            }
+        } catch (\PDOException $pDOException) {
+            // Log the error message
+            error_log($pDOException->getMessage());
+
+            return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
+        }
+    }
+
+    private function setColumn($data)
+    {
+        $setCols = [];
+        $vals = [];
+        foreach ($data as $key => $value) {
+            $q = "$key = ?";
+            array_push($setCols, $q);
+            array_push($vals, $value);
+            // echo $key . $value;
+        }
+
+        return [$setCols, $vals];
+    }
     public function getLastID($table)
     {
-
         $env = parse_ini_file('.env');
 
         $DBName = $env["DB_NAME"];
         $sql = "SELECT AUTO_INCREMENT 
                 FROM information_schema.TABLES 
                 WHERE TABLE_SCHEMA = '$DBName' AND TABLE_NAME = '$table'";
-
-
         return $this->connect()->query($sql)->fetchAll();
-        // return $this->executeGetQuery($sql)['data'][0]['AUTO_INCREMENT'];
-        // return $this->executeGetQuery($sql)['data'][0]['AUTO_INCREMENT'];
     }
 
     private function extractColumn($data)
@@ -106,7 +207,6 @@ class Query extends Connection
     private function extractValues($data)
     {
         $vals = array_values($data);
-
         return $vals;
     }
 }

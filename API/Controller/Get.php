@@ -13,13 +13,13 @@ class GET
         $this->blog = new Blogs();
     }
 
-    public function handleGET($endpoint)
+    public function handleGET($endpoint, $id, $type)
     {
         switch ($endpoint) {
             case "tag":
                 return $this->tag->getTags();
             case "blog":
-                return $this->blog->getBlog();
+                return $this->blog->getBlog($id, $type);
         }
     }
 }

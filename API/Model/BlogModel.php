@@ -28,8 +28,28 @@ class Blogs
         }
     }
 
-    public function getBlog()
+    public function getBlog($id, $type)
     {
-        return $this->query->selectQuery();
+        if (isset($id) && $type == "blogs") {
+            $condCol = ["author_blogID", $id];
+        } else if (isset($id) && $type == "authorBlogs") {
+            $condCol = ["$this->TABLE2.authorID", $id];
+        } else if (isset($id) && $type == "authorBlog") {
+            $condCol = ["$this->TABLE2.authorID = ? AND $this->TABLE2.author_blogID", [$id[0], $id[1]]];
+        } else {
+            $condCol = null;
+        }
+        // return $this->query->selectQuery();
+        return $this->query2->unionQuery($cols = null, ['blogID', 'authorID'], ['blog', 'author'], $condCol);
+    }
+
+    public function deleteBlog($id)
+    {
+        return $this->query->deleteQuery("blogID", $id);
+    }
+
+    public function putBlog($data, $id)
+    {
+        return $this->query->putQuery($data, 'blogID', $id);
     }
 }
