@@ -5,29 +5,56 @@ class Blogs
 {
     private $TABLE = "blog";
     private $TABLE2 = "`author-blog`";
+    private $TABLE3 = "`blog-tags`";
     private $query;
     private $query2;
+    private $query3;
     function __construct()
     {
         $this->query = new Query($this->TABLE);
         $this->query2 = new Query($this->TABLE2);
+        $this->query3 = new Query($this->TABLE3);
     }
 
     public function addBlog($data, $id)
     {
+        $origData = $data;
+        unset($data['tagID']);
+
         $res = $this->query->insertQuery($data);
 
-        // $data["blogID"] = $id;
-        if ($res["status"] == 200) {
-            $blogID = $this->query->getLastID($this->TABLE)[0]['AUTO_INCREMENT'] - 1;
-            $blog_author = ["blogID" => $blogID, "authorID" => $id];
+        if ($res['status'] != 200) return $res;
 
-            return $this->query2->insertQuery($blog_author);
-        } else {
-            return $res;
+        $blogID = $this->query->getLastID($this->TABLE)[0]['AUTO_INCREMENT'] - 1;
+
+        $blog_author = ["blogID" => $blogID, "authorID" => $id];
+
+        foreach ($origData['tagID'] as $tagID) {
+            $blog_tag = ["blogID" => $blogID, "tagID" => $tagID];
+            $tagRes = $this->query3->insertQuery($blog_tag);
+            if ($tagRes['status'] != 200) return $tagRes;
         }
+
+        return $this->query2->insertQuery($blog_author);
     }
 
+    /**
+SELECT
+    b.blogID,
+    b.blogTitle,
+    b.blogContent,
+    b.blogCreatedDate,
+    a.authorID,
+    a.authorName,
+    GROUP_CONCAT(t.tagTitle SEPARATOR ', ') AS tags
+FROM
+    blog b
+    INNER JOIN `author-blog` ab ON b.blogID = ab.blogID
+    INNER JOIN author a ON ab.authorID = a.authorID
+    LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
+    LEFT JOIN tags t ON bt.tagID = t.tagID
+GROUP BY
+    b.blogID, a.authorID;     */
     public function getBlog($id, $type)
     {
         if (isset($id) && $type == "blogs") {

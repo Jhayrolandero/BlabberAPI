@@ -43,12 +43,13 @@ $auth = new Auth();
 switch ($_SERVER['REQUEST_METHOD']) {
 
     case "GET":
-        $id = $auth->verifyToken()['payload']['id'];
 
         if (isset($_GET['q']) && $_GET['q'] == 'fetchBlog') {
+            $id = $auth->verifyToken()['payload']['id'];
             $condID = [$id, $request[1]];
             $type = "authorBlog";
         } else if (isset($_GET['q']) && $_GET['q'] == 'author') {
+            $id = $auth->verifyToken()['payload']['id'];
             $condID = $id;
             $type = "authorBlogs";
         } else if (isset($request[1])) {
@@ -59,7 +60,6 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $condID = null;
         }
         $res = $GET->handleGET($request[0], $condID, $type);
-        // http_response_code($res['status']);
         echo json_encode($res);
         break;
     default:
@@ -68,7 +68,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
     case "POST":
         $res = $POST->handlePost($request[0]);
-        http_response_code($res['status']);
+        // http_response_code($res['status']);
         echo json_encode($res);
         break;
 

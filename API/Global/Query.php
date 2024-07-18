@@ -51,6 +51,40 @@ class Query extends Connection
                 INNER JOIN `$bindTable[1]` on $this->TABLE.`$bindID[1]` = `$bindTable[1]`.`$bindID[1]`
         ";
 
+        return $this->executeQuery($sql, $cond);
+        // try {
+        //     if (isset($cond)) {
+        //         $condCol = $cond[0];
+        //         $val = $cond[1];
+
+        //         $sql .= " WHERE $condCol = ?";
+
+        //         $stmt = $this->connect()->prepare($sql);
+        //         if (is_array($val) && count($val) == 2) {
+        //             $stmt->bindParam(1, $val[0]);
+        //             $stmt->bindParam(2, $val[1]);
+        //         } else {
+        //             $stmt->bindParam(1, $val);
+        //         }
+
+        //         if ($stmt->execute()) {
+        //             return ["status" => 200, "message" => "Fetch successful", "data" => $stmt->fetchAll()];
+        //         } else {
+        //             return ["status" => 500, "message" => "Failed to execute"];
+        //         }
+        //     }
+
+        //     return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
+        // } catch (\PDOException $pDOException) {
+        //     // return $pDOException;
+        //     error_log($pDOException->getMessage());
+
+        //     return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
+        // }
+    }
+
+    public function executeQuery($sql, $cond = null)
+    {
         try {
             if (isset($cond)) {
                 $condCol = $cond[0];
@@ -72,16 +106,12 @@ class Query extends Connection
                     return ["status" => 500, "message" => "Failed to execute"];
                 }
             }
-
             return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
         } catch (\PDOException $pDOException) {
-            // return $pDOException;
             error_log($pDOException->getMessage());
-
             return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
         }
     }
-
     public function insertQuery($data)
     {
         $cols = implode(",", $this->extractColumn($data)[0]);
@@ -90,6 +120,7 @@ class Query extends Connection
 
         $sql = "INSERT INTO $this->TABLE ($cols)
                 VALUES ($placeholder)";
+
 
         try {
             $stmt = $this->connect()->prepare($sql);
