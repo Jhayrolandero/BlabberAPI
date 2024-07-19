@@ -83,7 +83,7 @@ class Query extends Connection
         // }
     }
 
-    public function executeQuery($sql, $cond = null)
+    public function executeQuery($sql, $cond = null, $groupBy = null)
     {
         try {
             if (isset($cond)) {
@@ -92,6 +92,12 @@ class Query extends Connection
 
                 $sql .= " WHERE $condCol = ?";
 
+                if (isset($groupBy)) {
+                    $sql .= " GROUP BY"
+                        . " $groupBy";
+                }
+
+                // return $sql;
                 $stmt = $this->connect()->prepare($sql);
                 if (is_array($val) && count($val) == 2) {
                     $stmt->bindParam(1, $val[0]);
@@ -106,6 +112,12 @@ class Query extends Connection
                     return ["status" => 500, "message" => "Failed to execute"];
                 }
             }
+
+            if (isset($groupBy)) {
+                $sql .= " GROUP BY"
+                    . " $groupBy";
+            }
+            // return $sql;
             return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
         } catch (\PDOException $pDOException) {
             error_log($pDOException->getMessage());

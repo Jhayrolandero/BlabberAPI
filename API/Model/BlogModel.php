@@ -37,37 +37,46 @@ class Blogs
 
         return $this->query2->insertQuery($blog_author);
     }
-
-    /**
-SELECT
-    b.blogID,
-    b.blogTitle,
-    b.blogContent,
-    b.blogCreatedDate,
-    a.authorID,
-    a.authorName,
-    GROUP_CONCAT(t.tagTitle SEPARATOR ', ') AS tags
-FROM
-    blog b
-    INNER JOIN `author-blog` ab ON b.blogID = ab.blogID
-    INNER JOIN author a ON ab.authorID = a.authorID
-    LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
-    LEFT JOIN tags t ON bt.tagID = t.tagID
-GROUP BY
-    b.blogID, a.authorID;     */
     public function getBlog($id, $type)
     {
+        // Public API to fetch a specific BLog
         if (isset($id) && $type == "blogs") {
-            $condCol = ["author_blogID", $id];
-        } else if (isset($id) && $type == "authorBlogs") {
-            $condCol = ["$this->TABLE2.authorID", $id];
-        } else if (isset($id) && $type == "authorBlog") {
-            $condCol = ["$this->TABLE2.authorID = ? AND $this->TABLE2.author_blogID", [$id[0], $id[1]]];
-        } else {
+            $condCol = ["ab.author_blogID", $id];
+        }
+        // For fetching author's blogs
+        else if (isset($id) && $type == "authorBlogs") {
+            $condCol = ["a.authorID", $id];
+        }
+        // For author fetch and edit a specific blog
+        else if (isset($id) && $type == "authorBlog") {
+            $condCol = ["a.authorID = ? AND ab.author_blogID", [$id[0], $id[1]]];
+        }
+        // Public API to fetch blogs for homepage
+        else {
             $condCol = null;
         }
+
+        $sql = "SELECT
+                    b.blogID,
+                    b.blogTitle,
+                    b.blogContent,
+                    b.blogCreatedDate,
+                    b.tagID,
+                    b.public,
+                    a.authorID,
+                    a.authorName,
+                    ab.author_blogID,
+                    GROUP_CONCAT(t.tagID SEPARATOR ', ') AS tags
+                FROM
+                    blog b
+                    INNER JOIN `author-blog` ab ON b.blogID = ab.blogID
+                    INNER JOIN author a ON ab.authorID = a.authorID
+                    LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
+                    LEFT JOIN tags t ON bt.tagID = t.tagID";
+
         // return $this->query->selectQuery();
-        return $this->query2->unionQuery($cols = null, ['blogID', 'authorID'], ['blog', 'author'], $condCol);
+        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID");
+        // return $this->query2->unionQuery($cols = null, ['blogID', 'authorID'], ['blog', 'author'], $condCol);
     }
 
     public function deleteBlog($id)

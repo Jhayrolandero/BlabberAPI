@@ -44,44 +44,54 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
     case "GET":
 
+        // For author fetch and edit a specific blog
         if (isset($_GET['q']) && $_GET['q'] == 'fetchBlog') {
             $id = $auth->verifyToken()['payload']['id'];
             $condID = [$id, $request[1]];
             $type = "authorBlog";
-        } else if (isset($_GET['q']) && $_GET['q'] == 'author') {
+        }
+
+        // For fetching author's blogs
+        else if (isset($_GET['q']) && $_GET['q'] == 'author') {
             $id = $auth->verifyToken()['payload']['id'];
             $condID = $id;
             $type = "authorBlogs";
-        } else if (isset($request[1])) {
+        }
+
+        // Public API to fetch a specific BLog
+        else if (isset($request[1])) {
             $condID = $request[1];
             $type = "blogs";
-        } else {
+        }
+
+        // Public API to fetch blogs for homepage
+        else {
             $type = "";
             $condID = null;
         }
         $res = $GET->handleGET($request[0], $condID, $type);
-        echo json_encode($res);
-        break;
-    default:
-        http_response_code(404);
-        break;
-
-    case "POST":
-        $res = $POST->handlePost($request[0]);
         // http_response_code($res['status']);
         echo json_encode($res);
         break;
-
+    case "POST":
+        $res = $POST->handlePost($request[0]);
+        http_response_code($res['status']);
+        echo json_encode($res);
+        break;
     case "DELETE":
+        $id = $auth->verifyToken()['payload']['id'];
         $res = $DELETE->handleDelete($request[0], $request[1]);
         // http_response_code($res['status']);
         echo json_encode($res);
         break;
-
     case "PUT":
+        $id = $auth->verifyToken()['payload']['id'];
         $jsonContent = file_get_contents('php://input');
         $data = json_decode($jsonContent, true);
         $res = $PUT->handlePUT($request[0], $data, $request[1]);
         echo json_encode($res);
+        break;
+    default:
+        http_response_code(404);
         break;
 }
