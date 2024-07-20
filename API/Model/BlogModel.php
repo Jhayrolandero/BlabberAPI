@@ -39,28 +39,31 @@ class Blogs
     }
     public function getBlog($id, $type)
     {
+        $like = false;
+        $random = false;
+        $condCol = null;
+        $limit = 0;
         // Public API to fetch a specific BLog
-        if (isset($id) && $type == "blogs") {
-            $like = false;
+        if (isset($id) && $type === "blogs") {
             $condCol = ["ab.author_blogID", $id];
         }
         // For fetching author's blogs
-        else if (isset($id) && $type == "authorBlogs") {
-            $like = false;
+        else if (isset($id) && $type === "authorBlogs") {
             $condCol = ["a.authorID", $id];
         }
         // For author fetch and edit a specific blog
-        else if (isset($id) && $type == "authorBlog") {
-            $like = false;
+        else if (isset($id) && $type === "authorBlog") {
             $condCol = ["a.authorID = ? AND ab.author_blogID", [$id[0], $id[1]]];
-        } else if ($type == "searchBlog") {
+        }
+        // Searching Blog
+        else if ($type === "searchBlog") {
             $like = true;
             $condCol = ["LOWER(b.blogContent) LIKE ? OR LOWER(b.blogTitle) LIKE ?", ["%$id%", "%$id%"]];
         }
-        // Public API to fetch blogs for homepage
-        else {
-            $like = false;
-            $condCol = null;
+        // Read more
+        else if ($type === "readMore") {
+            $random = true;
+            $limit = 10;
         }
 
         $sql = "SELECT
@@ -81,9 +84,7 @@ class Blogs
                     LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
                     LEFT JOIN tags t ON bt.tagID = t.tagID";
 
-        // return $this->query->selectQuery();
-        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like);
-        // return $this->query2->unionQuery($cols = null, ['blogID', 'authorID'], ['blog', 'author'], $condCol);
+        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like, $random, $limit);
     }
 
     public function deleteBlog($id)

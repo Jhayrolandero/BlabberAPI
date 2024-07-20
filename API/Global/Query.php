@@ -54,7 +54,7 @@ class Query extends Connection
         return $this->executeQuery($sql, $cond);
     }
 
-    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false)
+    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false, $random = false, $limit = 0)
     {
         try {
             if (isset($cond)) {
@@ -66,12 +66,25 @@ class Query extends Connection
                 } else {
                     $sql .= " WHERE $condCol";
                 }
+            }
 
-                if (isset($groupBy)) {
-                    $sql .= " GROUP BY"
-                        . " $groupBy";
-                }
+            if (isset($groupBy)) {
+                $sql .= " GROUP BY"
+                    . " $groupBy";
+            }
 
+            if ($random) {
+                $sql .= " ORDER BY"
+                    . " RAND()";
+            }
+
+            if ($limit > 0) {
+                $val = $limit;
+                $sql .= " LIMIT"
+                    . " ?";
+            }
+
+            if (isset($cond) || $like || $limit > 0) {
                 $stmt = $this->connect()->prepare($sql);
                 if (is_array($val) && count($val) == 2) {
                     $stmt->bindParam(1, $val[0]);
@@ -85,14 +98,9 @@ class Query extends Connection
                 } else {
                     return ["status" => 500, "message" => "Failed to execute"];
                 }
+            } else {
+                return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
             }
-
-            if (isset($groupBy)) {
-                $sql .= " GROUP BY"
-                    . " $groupBy";
-            }
-            // return $sql;
-            return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
         } catch (\PDOException $pDOException) {
             error_log($pDOException->getMessage());
             return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];

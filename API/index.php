@@ -58,6 +58,12 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $type = "authorBlogs";
         }
 
+        // Fetching read more 
+        else if (isset($_GET['q']) && $_GET['q'] == 'read') {
+            $condID = null;
+            $type = "readMore";
+        }
+
         // Public API to fetch a specific BLog
         else if (isset($request[1])) {
             $condID = $request[1];
