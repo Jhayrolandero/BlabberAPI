@@ -41,18 +41,25 @@ class Blogs
     {
         // Public API to fetch a specific BLog
         if (isset($id) && $type == "blogs") {
+            $like = false;
             $condCol = ["ab.author_blogID", $id];
         }
         // For fetching author's blogs
         else if (isset($id) && $type == "authorBlogs") {
+            $like = false;
             $condCol = ["a.authorID", $id];
         }
         // For author fetch and edit a specific blog
         else if (isset($id) && $type == "authorBlog") {
+            $like = false;
             $condCol = ["a.authorID = ? AND ab.author_blogID", [$id[0], $id[1]]];
+        } else if ($type == "searchBlog") {
+            $like = true;
+            $condCol = ["LOWER(b.blogContent) LIKE ? OR LOWER(b.blogTitle) LIKE ?", ["%$id%", "%$id%"]];
         }
         // Public API to fetch blogs for homepage
         else {
+            $like = false;
             $condCol = null;
         }
 
@@ -75,7 +82,7 @@ class Blogs
                     LEFT JOIN tags t ON bt.tagID = t.tagID";
 
         // return $this->query->selectQuery();
-        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID");
+        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like);
         // return $this->query2->unionQuery($cols = null, ['blogID', 'authorID'], ['blog', 'author'], $condCol);
     }
 

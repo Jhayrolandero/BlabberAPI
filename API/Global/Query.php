@@ -54,21 +54,24 @@ class Query extends Connection
         return $this->executeQuery($sql, $cond);
     }
 
-    public function executeQuery($sql, $cond = null, $groupBy = null)
+    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false)
     {
         try {
             if (isset($cond)) {
                 $condCol = $cond[0];
                 $val = $cond[1];
 
-                $sql .= " WHERE $condCol = ?";
+                if (!$like) {
+                    $sql .= " WHERE $condCol = ?";
+                } else {
+                    $sql .= " WHERE $condCol";
+                }
 
                 if (isset($groupBy)) {
                     $sql .= " GROUP BY"
                         . " $groupBy";
                 }
 
-                // return $sql;
                 $stmt = $this->connect()->prepare($sql);
                 if (is_array($val) && count($val) == 2) {
                     $stmt->bindParam(1, $val[0]);

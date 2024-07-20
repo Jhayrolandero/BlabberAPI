@@ -64,6 +64,12 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $type = "blogs";
         }
 
+        // For searching
+        else if (isset($_GET['s'])) {
+            $type = "searchBlog";
+            $condID = $_GET['s'];
+        }
+
         // Public API to fetch blogs for homepage
         else {
             $type = "";
