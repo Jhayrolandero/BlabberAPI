@@ -52,35 +52,6 @@ class Query extends Connection
         ";
 
         return $this->executeQuery($sql, $cond);
-        // try {
-        //     if (isset($cond)) {
-        //         $condCol = $cond[0];
-        //         $val = $cond[1];
-
-        //         $sql .= " WHERE $condCol = ?";
-
-        //         $stmt = $this->connect()->prepare($sql);
-        //         if (is_array($val) && count($val) == 2) {
-        //             $stmt->bindParam(1, $val[0]);
-        //             $stmt->bindParam(2, $val[1]);
-        //         } else {
-        //             $stmt->bindParam(1, $val);
-        //         }
-
-        //         if ($stmt->execute()) {
-        //             return ["status" => 200, "message" => "Fetch successful", "data" => $stmt->fetchAll()];
-        //         } else {
-        //             return ["status" => 500, "message" => "Failed to execute"];
-        //         }
-        //     }
-
-        //     return  ["status" => 200, "message" => "Fetch successful", "data" => $this->connect()->query($sql)->fetchAll()];
-        // } catch (\PDOException $pDOException) {
-        //     // return $pDOException;
-        //     error_log($pDOException->getMessage());
-
-        //     return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
-        // }
     }
 
     public function executeQuery($sql, $cond = null, $groupBy = null)
@@ -124,10 +95,96 @@ class Query extends Connection
             return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
         }
     }
+
+    // Another Glue function
+    public function multipleInsertQuery($data)
+    {
+
+        try {
+
+            $cols = implode(",", $this->extractColumn($data)[0]);
+            $placeholder = $this->extractColumn($data)[1];
+            $vals = $this->extractValues($data);
+            $tempvals = $vals;
+
+            $placeholder[0] = "(?";
+            $placeholder[count($placeholder) - 1] = "?)";
+
+            $placeSTR = implode(',', $placeholder);
+
+            // Perhaps it's better to call this on the main model class only and just pass as an argument
+            $maxCount = 0;
+            $prevMax = 0;
+            $maxIdx = 0;
+            $currIdx = 0;
+
+            // Count the largest col value
+            foreach ($vals as $val) {
+                $currCount = count($val);
+
+                if ($currCount > $prevMax) {
+                    $prevMax = $currCount;
+                    $maxIdx = $currIdx;
+                }
+                $currIdx += 1;
+            }
+            $maxCount = $prevMax;
+
+            $placeholder = [];
+
+            for ($i = 0; $i < $maxCount; $i += 1) {
+                array_push($placeholder, $placeSTR);
+            }
+
+
+            $placeholder = implode(',', $placeholder);
+
+            $sql = "INSERT INTO $this->TABLE ($cols)
+                VALUES $placeholder";
+
+            $vals = [];
+
+
+            for ($i = 0; $i < count($tempvals[$maxIdx]); $i++) {
+                array_push($vals, [$tempvals[$maxIdx][$i], $tempvals[1][0]]);
+            }
+
+            // return count($vals);
+            $stmt = $this->connect()->prepare($sql);
+            $pos = 1;
+
+            if (count($vals) == 1) {
+                for ($i = 0; $i < count($vals[0]); $i++) {
+                    $stmt->bindParam($pos, $vals[0][$i]);
+                    $pos += 1;
+                }
+            } else {
+                for ($i = 0; $i < count($vals); $i++) {
+                    for ($j = 0; $j < count($vals[1]); $j++) {
+                        // echo $vals[$i][$j];
+                        $stmt->bindParam($pos, $vals[$i][$j]);
+                        $pos += 1;
+                    }
+                }
+            }
+
+            if ($stmt->execute()) {
+                return ["status" => 200, "message" => "Insert successful"];
+            } else {
+                return ["status" => 500, "message" => "Failed to execute"];
+            }
+        } catch (\PDOException $pDOException) {
+            // Log the error message
+            error_log($pDOException->getMessage());
+
+            return ["status" => 500, "message" => "Failed to execute", "details" => $pDOException->getMessage()];
+        }
+    }
+
     public function insertQuery($data)
     {
         $cols = implode(",", $this->extractColumn($data)[0]);
-        $placeholder = $this->extractColumn($data)[1];
+        $placeholder = implode(",", $this->extractColumn($data)[1]);
         $vals = $this->extractValues($data);
 
         $sql = "INSERT INTO $this->TABLE ($cols)
@@ -142,7 +199,6 @@ class Query extends Connection
                 $stmt->bindParam($pos, $vals[$i]);
                 $pos += 1;
             }
-            // return $stmt->execute();
 
             if ($stmt->execute()) {
                 return ["status" => 200, "message" => "Insert successful"];
@@ -187,6 +243,7 @@ class Query extends Connection
                 SET $uCol
                 WHERE $cond = ?";
 
+        // return $sql;
         try {
             $stmt = $this->connect()->prepare($sql);
             // Glue
@@ -244,7 +301,7 @@ class Query extends Connection
             array_push($placeHolder, "?");
         }
 
-        return [$cols, implode(",", $placeHolder)];
+        return [$cols, $placeHolder];
     }
 
     private function extractValues($data)

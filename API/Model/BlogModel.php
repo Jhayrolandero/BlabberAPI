@@ -86,6 +86,23 @@ class Blogs
 
     public function putBlog($data, $id)
     {
-        return $this->query->putQuery($data, 'blogID', $id);
+        $tagData = ['tagID' => $data['tagID']];
+        unset($data['tagID']);
+
+        if (count($data) > 0) {
+            $res = $this->query->putQuery($data, 'blogID', $id);
+
+            if ($res['status'] != 200) return $res;
+        }
+
+        // Delete query
+        $res2 = $this->query3->deleteQuery("blogID", $id);
+
+        if ($res2['status'] != 200) return $res2;
+
+
+        $insQuery = ['tagID' => $tagData['tagID'], 'blogID' => [$id]];
+
+        return $this->query3->multipleInsertQuery($insQuery);
     }
 }
