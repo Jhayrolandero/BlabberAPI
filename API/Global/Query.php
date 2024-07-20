@@ -79,16 +79,23 @@ class Query extends Connection
             }
 
             if ($limit > 0) {
-                $val = $limit;
+                array_push($val, $limit);
+                // $val = $limit;
                 $sql .= " LIMIT"
                     . " ?";
             }
 
+            // return $sql;
             if (isset($cond) || $like || $limit > 0) {
                 $stmt = $this->connect()->prepare($sql);
                 if (is_array($val) && count($val) == 2) {
-                    $stmt->bindParam(1, $val[0]);
-                    $stmt->bindParam(2, $val[1]);
+                    $pos = 1;
+                    for ($i = 0; $i < count($val); $i += 1) {
+                        $stmt->bindParam($pos, $val[$i]);
+                        $pos += 1;
+                    }
+                    // $stmt->bindParam(1, $val[0]);
+                    // $stmt->bindParam(2, $val[1]);
                 } else {
                     $stmt->bindParam(1, $val);
                 }

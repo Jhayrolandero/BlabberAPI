@@ -19,6 +19,7 @@ class Blogs
     public function addBlog($data, $id)
     {
         $origData = $data;
+        $data['authorID'] = $id;
         unset($data['tagID']);
 
         $res = $this->query->insertQuery($data);
@@ -35,7 +36,8 @@ class Blogs
             if ($tagRes['status'] != 200) return $tagRes;
         }
 
-        return $this->query2->insertQuery($blog_author);
+        return $tagRes;
+        // return $this->query->insertQuery($blog_author);
     }
     public function getBlog($id, $type)
     {
@@ -43,6 +45,11 @@ class Blogs
         $random = false;
         $condCol = null;
         $limit = 0;
+
+        /*
+        
+        FIx the blog fetch
+        */
         // Public API to fetch a specific BLog
         if (isset($id) && $type === "blogs") {
             $condCol = ["ab.author_blogID", $id];
@@ -63,6 +70,7 @@ class Blogs
         // Read more
         else if ($type === "readMore") {
             $random = true;
+            $condCol = ["b.public", [1]];
             $limit = 10;
         }
 
