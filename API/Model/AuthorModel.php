@@ -36,4 +36,9 @@ class Author
 
         return $this->query->selectQuery($cols, $cond);
     }
+
+    public function editProfileImg($data, $id)
+    {
+        return $this->query->putQuery($data, 'authorID', $id);
+    }
 }

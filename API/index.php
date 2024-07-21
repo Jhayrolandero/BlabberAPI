@@ -102,7 +102,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
     case "POST":
         $res = $POST->handlePost($request[0]);
-        http_response_code($res['status']);
+        // http_response_code($res['status']);
         echo json_encode($res);
         break;
     case "DELETE":

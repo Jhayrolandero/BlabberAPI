@@ -262,7 +262,7 @@ class Query extends Connection
                 SET $uCol
                 WHERE $cond = ?";
 
-        // return $sql;
+        // return $vals;
         try {
             $stmt = $this->connect()->prepare($sql);
             // Glue

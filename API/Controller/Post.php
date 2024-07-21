@@ -30,6 +30,9 @@ class POST
             case "comment";
                 $id = $this->auth->verifyToken()['payload']['id'];
                 return $this->comment->addComment($_POST, $id);
+            case "profile";
+                $id = $this->auth->verifyToken()['payload']['id'];
+                return $this->author->editProfileImg($_POST, $id);
             default:
                 return ["status" => 404, "message" => "Not Found"];
         }
