@@ -54,6 +54,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         // For fetching author's blogs
         else if (isset($_GET['q']) && $_GET['q'] == 'author') {
             $id = $auth->verifyToken()['payload']['id'];
+            // echo $id;
             $condID = $id;
             $type = "authorBlogs";
         }
@@ -81,6 +82,13 @@ switch ($_SERVER['REQUEST_METHOD']) {
         else if (isset($_GET['s'])) {
             $type = "searchBlog";
             $condID = $_GET['s'];
+        } else if ($request[0] === 'profile' && isset($request[1])) {
+            $type = '';
+            $condID = $request[1];
+        } else if ($request[0] === 'profile') {
+            $type = '';
+            $id = $auth->verifyToken()['payload']['id'];
+            $condID = $id;
         }
 
         // Public API to fetch blogs for homepage

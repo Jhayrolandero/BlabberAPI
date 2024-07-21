@@ -23,7 +23,7 @@ class Comment
         if ($res['status'] != 200) return $res;
 
         $sql = "SELECT 
-                    c.commentContent, c.commentID, c.commentDate, a.authorName 
+                    c.commentContent, c.commentID, c.commentDate, a.authorName, a.authorID, a.authorImg
                 FROM 
                     `comment` c
                 INNER JOIN 
@@ -40,7 +40,7 @@ class Comment
 
 
         $sql = "SELECT 
-                    c.commentContent, c.commentID, c.commentDate, a.authorName 
+                    c.commentContent, c.commentID, c.commentDate, a.authorName, a.authorID, a.authorImg
                 FROM 
                     `comment` c
                 INNER JOIN 
@@ -49,5 +49,12 @@ class Comment
         $condCol = ["c.blogID", $bID];
 
         return $this->query->executeQuery($sql, $condCol);
+    }
+
+    public function deleteComment($cID)
+    {
+        $cond = "commentID";
+
+        return $this->query->deleteQuery($cond, $cID);
     }
 }

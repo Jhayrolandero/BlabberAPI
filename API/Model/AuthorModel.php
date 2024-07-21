@@ -29,7 +29,11 @@ class Author
     }
 
 
-    public function getAuthor($id)
+    public function getAuthorProfile($id)
     {
+        $cols = ['authorImg', 'authorID', 'authorName'];
+        $cond = ['authorID', $id];
+
+        return $this->query->selectQuery($cols, $cond);
     }
 }
