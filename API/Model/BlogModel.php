@@ -28,7 +28,6 @@ class Blogs
 
         $blogID = $this->query->getLastID($this->TABLE)[0]['AUTO_INCREMENT'] - 1;
 
-        $blog_author = ["blogID" => $blogID, "authorID" => $id];
 
         foreach ($origData['tagID'] as $tagID) {
             $blog_tag = ["blogID" => $blogID, "tagID" => $tagID];
@@ -45,7 +44,7 @@ class Blogs
         $random = false;
         $condCol = null;
         $limit = 0;
-
+        $not = false;
         /*
         
         FIx the blog fetch
@@ -74,6 +73,13 @@ class Blogs
             $condCol = ["b.public", [1]];
             $limit = 10;
         }
+        // Read momre exclude
+        else if ($type === "readMoreExc") {
+            $random = true;
+            $condCol = ["b.blogID", [$id]];
+            $limit = 10;
+            $not = true;
+        }
 
         $sql = "SELECT
                     b.blogID,
@@ -90,7 +96,7 @@ class Blogs
                     INNER JOIN author a ON b.authorID = a.authorID
                     LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
                     LEFT JOIN tags t ON bt.tagID = t.tagID";
-        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like, $random, $limit);
+        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like, $random, $limit, $not);
     }
 
     public function deleteBlog($id)

@@ -54,7 +54,7 @@ class Query extends Connection
         return $this->executeQuery($sql, $cond);
     }
 
-    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false, $random = false, $limit = 0)
+    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false, $random = false, $limit = 0, $not = false)
     {
         try {
             if (isset($cond)) {
@@ -63,6 +63,8 @@ class Query extends Connection
 
                 if (!$like) {
                     $sql .= " WHERE $condCol = ?";
+                } else if ($not) {
+                    $sql .= " WHERE $condCol <> ?";
                 } else {
                     $sql .= " WHERE $condCol";
                 }
@@ -85,7 +87,6 @@ class Query extends Connection
                     . " ?";
             }
 
-            // return $sql;
             if (isset($cond) || $like || $limit > 0) {
                 $stmt = $this->connect()->prepare($sql);
                 if (is_array($val) && count($val) == 2) {
