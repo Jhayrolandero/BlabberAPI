@@ -52,7 +52,7 @@ class Blogs
         */
         // Public API to fetch a specific BLog
         if (isset($id) && $type === "blogs") {
-            $condCol = ["ab.author_blogID", $id];
+            $condCol = ["b.blogID", $id];
         }
         // For fetching author's blogs
         else if (isset($id) && $type === "authorBlogs") {
@@ -60,7 +60,8 @@ class Blogs
         }
         // For author fetch and edit a specific blog
         else if (isset($id) && $type === "authorBlog") {
-            $condCol = ["a.authorID = ? AND ab.author_blogID", [$id[0], $id[1]]];
+            $condCol = ["a.authorID = ? AND b.blogID", [$id[0], $id[1]]];
+            // $condCol = ["a.authorID = ? AND ab.author_blogID", [$id[0], $id[1]]];
         }
         // Searching Blog
         else if ($type === "searchBlog") {
@@ -83,15 +84,12 @@ class Blogs
                     b.public,
                     a.authorID,
                     a.authorName,
-                    ab.author_blogID,
                     GROUP_CONCAT(t.tagID SEPARATOR ', ') AS tags
                 FROM
                     blog b
-                    INNER JOIN `author-blog` ab ON b.blogID = ab.blogID
-                    INNER JOIN author a ON ab.authorID = a.authorID
+                    INNER JOIN author a ON b.authorID = a.authorID
                     LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
                     LEFT JOIN tags t ON bt.tagID = t.tagID";
-
         return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like, $random, $limit);
     }
 

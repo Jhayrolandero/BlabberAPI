@@ -24,11 +24,6 @@ class POST
                 return $this->author->addAuthor($_POST);
             case "login":
                 return $this->auth->loginValid($_POST);
-                // case "test":
-                //     foreach ($_POST['tagID'] as $id) {
-                //         echo $id;
-                //     }
-                //     return array_values($_POST['tagID']);
             case "blog":
                 $id = $this->auth->verifyToken()['payload']['id'];
                 return $this->blog->addBlog($_POST, $id);
