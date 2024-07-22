@@ -37,9 +37,25 @@ class GET
             case "profile":
                 return $this->author->getAuthorProfile($id);
             case "test":
-                // json_decode($redis->get($cacheKey), true);
-                // $this->redis->redis()->set('foo:1', 'bar');
-                $value = $this->redis->redis()->hgetall('blog:93');
+
+                $client = $this->redis->redis();
+
+                // Fetching pagination
+                $CACHEKEY = "page:1";
+                if ($client->exists($CACHEKEY)) {
+
+                    $ids = $client->smembers($CACHEKEY);
+
+                    foreach ($ids as $id) {
+                        print_r($client->hgetall("blog:$id"));
+                    }
+                    // return $client->smembers($CACHEKEY);
+
+                    // echo "Fetching from cache...\n";
+                    // return json_decode($redis->get($cacheKey), true);
+                }
+                $value = $client->flushall();
+                // $value = $this->redis->redis()->hgetall('blog:93');
                 // echo $this->redis->redis()->ping();
                 return $value;
         }
