@@ -45,6 +45,7 @@ class Blogs
         $condCol = null;
         $limit = 0;
         $not = false;
+        $offset = 0;
         /*
         
         FIx the blog fetch
@@ -52,6 +53,14 @@ class Blogs
         // Public API to fetch a specific BLog
         if (isset($id) && $type === "blogs") {
             $condCol = ["b.blogID", $id];
+        }
+
+        // Public pagination
+        else if ($type === 'page') {
+            // $condCol = [""]
+            $pages = 5;
+            $limit = $pages;
+            $offset = ($id - 1) * $pages;
         }
         // For fetching author's blogs
         else if (isset($id) && $type === "authorBlogs") {
@@ -70,8 +79,8 @@ class Blogs
         // Read more
         else if ($type === "readMore") {
             $random = true;
-            $condCol = ["b.public", [1]];
-            $limit = 10;
+            $condCol = ["b.public", 1];
+            $limit = 5;
         }
         // Read momre exclude
         else if ($type === "readMoreExc") {
@@ -96,7 +105,7 @@ class Blogs
                     INNER JOIN author a ON b.authorID = a.authorID
                     LEFT JOIN `blog-tags` bt ON b.blogID = bt.blogID
                     LEFT JOIN tags t ON bt.tagID = t.tagID";
-        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like, $random, $limit, $not);
+        return $this->query->executeQuery($sql, $condCol, "b.blogID, a.authorID", $like, $random, $limit, $not, $offset);
     }
 
     public function deleteBlog($id)

@@ -54,7 +54,7 @@ class Query extends Connection
         return $this->executeQuery($sql, $cond);
     }
 
-    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false, $random = false, $limit = 0, $not = false)
+    public function executeQuery($sql, $cond = null, $groupBy = null, $like = false, $random = false, $limit = 0, $not = false, $offset = 0)
     {
         try {
             if (isset($cond)) {
@@ -81,15 +81,21 @@ class Query extends Connection
             }
 
             if ($limit > 0) {
-                array_push($val, $limit);
+                // array_push($val, $limit);
                 // $val = $limit;
                 $sql .= " LIMIT"
-                    . " ?";
+                    . " $limit";
             }
 
-            if (isset($cond) || $like || $limit > 0) {
+            if ($offset > 0) {
+                $sql .= " OFFSET"
+                    . " $offset";
+            }
+
+            // return $sql;
+            if (isset($cond) || $like) {
                 $stmt = $this->connect()->prepare($sql);
-                if (is_array($val) && count($val) == 2) {
+                if (is_array($val) && count($val) >= 2) {
                     $pos = 1;
                     for ($i = 0; $i < count($val); $i += 1) {
                         $stmt->bindParam($pos, $val[$i]);

@@ -6,6 +6,7 @@ include_once "./Controller/Post.php";
 include_once "./Controller/Delete.php";
 include_once "./Controller/Put.php";
 include_once "./Controller/AuthController.php";
+include_once "./Model/Redis.php";
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Credentials: true');
@@ -49,6 +50,12 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $id = $auth->verifyToken()['payload']['id'];
             $condID = [$id, $request[1]];
             $type = "authorBlog";
+        }
+
+        // Public post pagination
+        else if (isset($_GET['p']) && is_numeric($_GET['p'])) {
+            $condID = $_GET['p'];
+            $type = 'page';
         }
 
         // For fetching author's blogs
